@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sportify - Ultimate Tracker</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,700;1,900&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <!-- Chart JS -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app-container">
+    <!-- Sidebar -->
+    <nav class="sidebar carbon-bg">
+        <div class="logo">SPORT<span>IFY</span> <i class="fas fa-bolt"></i></div>
+        <button class="nav-btn active" onclick="switchTab('dashboard')">Dashboard</button>
+        <button class="nav-btn" onclick="switchTab('add')">Catat Aktivitas</button>
+        <button class="nav-btn" onclick="switchTab('history')">Riwayat</button>
+        <button class="nav-btn" onclick="switchTab('stats')">Statistik & Recovery</button>
+        <button class="nav-btn" onclick="switchTab('profile')">Profil & Target</button>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+
+        <!-- 1. DASHBOARD -->
+        <div id="dashboard" class="section active">
+            <!-- Weather & Recovery Row -->
+            <div class="top-widgets">
+                <div class="card weather-card">
+                    <h3><i class="fas fa-cloud-sun"></i> Cuaca & Rekomendasi</h3>
+                    <div class="weather-info">
+                        <div id="weather-icon" class="weather-icon">☀️</div>
+                        <div>
+                            <h4 id="weather-status">Memuat Cuaca...</h4>
+                            <p id="weather-rec" class="small-text">Sedang mengambil data...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card recovery-card">
+                    <h3><i class="fas fa-heartbeat"></i> Recovery Score</h3>
+                    <div class="recovery-meter">
+                        <div class="rec-circle">
+                            <span id="recovery-val">100%</span>
+                        </div>
+                        <p id="recovery-msg" class="small-text">Tubuh Anda Siap!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Schedule Section -->
+            <div class="card">
+                <h3><i class="fas fa-calendar-alt"></i> Jadwal Hari Ini</h3>
+                <div class="schedule-input-group">
+                    <input type="text" id="scheduleInput" placeholder="Rencana olahraga hari ini? (Misal: Lari Sore)">
+                    <button onclick="setSchedule()" class="btn-small">Set</button>
+                </div>
+                <div id="today-schedule-display" style="margin-top:10px; color:var(--secondary); font-weight:bold;">
+                    Belum ada jadwal.
+                </div>
+            </div>
+
+            <!-- Summary Stats -->
+            <div class="card">
+                <h2>Ringkasan Hari Ini</h2>
+                <div class="stats-row">
+                    <div class="stat-box">
+                        <div class="stat-num" id="dash-cal">0</div>
+                        <div class="stat-label">Kalori (Kcal)</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-num" id="dash-min">0</div>
+                        <div class="stat-label">Menit</div>
+                    </div>
+                </div>
+                
+                <h4 style="margin-top:20px;">Target Mingguan</h4>
+                <div class="progress-container">
+                    <div class="progress-bar" id="weekly-progress"></div>
+                </div>
+                <p style="text-align:right; font-size:0.8rem;" id="target-text">0/150 Menit</p>
+            </div>
+        </div>
+
+        <!-- 2. TAMBAH AKTIVITAS -->
+        <div id="add" class="section">
+            <div class="card">
+                <h2>Input Latihan</h2>
+                <form id="activityForm" onsubmit="saveActivity(event)">
+                    <div class="form-group">
+                        <label>Jenis Olahraga</label>
+                        <select id="type" required>
+                            <option value="Lari">Lari (Running)</option>
+                            <option value="Bersepeda">Bersepeda (Cycling)</option>
+                            <option value="Renang">Berenang (Swimming)</option>
+                            <option value="Gym">Gym / Angkat Beban</option>
+                            <option value="Push Up">Push Up / Kalistenik</option>
+                            <option value="Sepak Bola">Sepak Bola / Futsal</option>
+                            <option value="Basket">Basket</option>
+                            <option value="Yoga">Yoga</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Durasi (Menit)</label>
+                        <input type="number" id="duration" placeholder="Min: 1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Jarak (Km) / Repetisi</label>
+                        <input type="number" id="distance" placeholder="Opsional">
+                    </div>
+                    <div class="form-group">
+                        <label>Tanggal</label>
+                        <input type="date" id="date" required>
+                    </div>
+                    <button type="submit" class="btn-primary">SIMPAN & HITUNG</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 3. RIWAYAT -->
+        <div id="history" class="section">
+            <div class="card">
+                <h2>Riwayat Aktivitas</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tgl</th>
+                            <th>Jenis</th>
+                            <th>Durasi</th>
+                            <th>Kalori</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 4. STATISTIK (New Tab) -->
+        <div id="stats" class="section">
+            <div class="card">
+                <h2>Tren Mingguan</h2>
+                <canvas id="workoutChart" height="120"></canvas>
+            </div>
+            <div class="card">
+                <h3>Analisa Performa</h3>
+                <p style="color:#aaa; line-height:1.6;">
+                    Recovery score Anda dihitung berdasarkan intensitas latihan 2 hari terakhir.
+                    Pastikan istirahat cukup jika grafik menunjukkan intensitas tinggi berturut-turut.
+                </p>
+            </div>
+        </div>
+
+        <!-- 5. PROFIL -->
+        <div id="profile" class="section">
+            <div class="card">
+                <h2>Pengaturan Profil</h2>
+                <div class="form-group">
+                    <label>Berat Badan (Kg)</label>
+                    <input type="number" id="weight" value="70" onchange="updateSettings()">
+                </div>
+                <div class="form-group">
+                    <label>Target Mingguan (Menit)</label>
+                    <input type="number" id="weeklyTarget" value="150" onchange="updateSettings()">
+                </div>
+                <button class="btn-small" onclick="requestNotifPermission()" style="background:#333; margin-top:10px;">
+                    <i class="fas fa-bell"></i> Aktifkan Notifikasi Pengingat
+                </button>
+            </div>
+            
+            <div class="card">
+                <h2>Koleksi Badge (5)</h2>
+                <div class="badge-grid">
+                    <div class="badge" id="badge-newbie">
+                        <span>🏁</span> Newbie (Login Pertama)
+                    </div>
+                    <div class="badge" id="badge-burner">
+                        <span>🔥</span> Burner (500+ Kcal)
+                    </div>
+                    <div class="badge" id="badge-endurance">
+                        <span>🏃</span> Endurance (60+ Menit)
+                    </div>
+                    <div class="badge" id="badge-streak">
+                        <span>⚡</span> Streak (3 Latihan)
+                    </div>
+                    <div class="badge" id="badge-night">
+                        <span>🌙</span> Night Owl (Latihan Malam)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
